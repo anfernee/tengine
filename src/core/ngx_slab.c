@@ -78,6 +78,8 @@ ngx_slab_init(ngx_slab_pool_t *pool)
     ngx_uint_t        i, n, pages;
     ngx_slab_page_t  *slots;
 
+printf("ngx_pagesize: %d\n", (uint32_t)ngx_pagesize);
+
     /* STUB */
     if (ngx_slab_max_size == 0) {
         ngx_slab_max_size = ngx_pagesize / 2;
@@ -88,15 +90,23 @@ ngx_slab_init(ngx_slab_pool_t *pool)
     }
     /**/
 
-    pool->min_size = 1 << pool->min_shift;
+/* TODO Test */
+printf("ngx_slab_exact_size: %d\n", (uint32_t)ngx_slab_exact_size);
+printf("ngx_slab_exact_shift: %d\n", (uint32_t)ngx_slab_exact_shift);
 
+    pool->min_size = 1 << pool->min_shift;
+printf("pool->min_size: %d\n", (uint32_t)pool->min_size);
+
+printf("pool addr: %p\n", pool);
     p = (u_char *) pool + sizeof(ngx_slab_pool_t);
     size = pool->end - p;
+printf("slots addr: %p\n", p);
 
     ngx_slab_junk(p, size);
 
     slots = (ngx_slab_page_t *) p;
     n = ngx_pagesize_shift - pool->min_shift;
+printf("# slots(slab page): %d\n", (uint32_t)n);
 
     for (i = 0; i < n; i++) {
         slots[i].slab = 0;
@@ -105,8 +115,10 @@ ngx_slab_init(ngx_slab_pool_t *pool)
     }
 
     p += n * sizeof(ngx_slab_page_t);
+printf("pages addr: %p\n", p);
 
     pages = (ngx_uint_t) (size / (ngx_pagesize + sizeof(ngx_slab_page_t)));
+printf("# pages: %d\n", (uint32_t)pages);
 
     ngx_memzero(p, pages * sizeof(ngx_slab_page_t));
 
@@ -192,6 +204,7 @@ ngx_slab_alloc_locked(ngx_slab_pool_t *pool, size_t size)
     slots = (ngx_slab_page_t *) ((u_char *) pool + sizeof(ngx_slab_pool_t));
     page = slots[slot].next;
 
+    /* already has dirty page */
     if (page->next != page) {
 
         if (shift < ngx_slab_exact_shift) {

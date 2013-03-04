@@ -40,12 +40,16 @@ ngx_os_init(ngx_log_t *log)
     }
 #endif
 
-    ngx_init_setproctitle(log);
+ngx_log_stderr(0, "before setproctitle");
+// because of ngx_alloc
+    // ngx_init_setproctitle(log);
+ngx_log_stderr(0, "after setproctitle");
 
     ngx_pagesize = getpagesize();
     ngx_cacheline_size = NGX_CPU_CACHE_LINE;
 
     for (n = ngx_pagesize; n >>= 1; ngx_pagesize_shift++) { /* void */ }
+ngx_log_stderr(0, "after getpagesize");
 
 #if (NGX_HAVE_SC_NPROCESSORS_ONLN)
     if (ngx_ncpu <= 0) {
@@ -63,6 +67,7 @@ ngx_os_init(ngx_log_t *log)
     }
 
     ngx_cpuinfo();
+ngx_log_stderr(0, "after cpuinfo");
 
     if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1) {
         ngx_log_error(NGX_LOG_ALERT, log, errno,
@@ -79,6 +84,7 @@ ngx_os_init(ngx_log_t *log)
 #endif
 
     srandom(ngx_time());
+ngx_log_stderr(0, "after srandom ngx_time");
 
     return NGX_OK;
 }
