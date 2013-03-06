@@ -25,6 +25,18 @@ ngx_exec_new_binary(ngx_cycle_t *cycle, char *const *argv) {
 static u_char *ngx_prefix;
 
 void
+inspect_array(ngx_array_t *array) {
+    printf("array: nelts: %d, size: %d, nalloc: %d\n",
+            (uint32_t)array->nelts, (uint32_t)array->size, (uint32_t)array->nalloc);
+}
+
+void
+inspect_list(ngx_list_t *list) {
+    printf("list: nelts: %d, size: %d, nalloc: %d\n",
+           (uint32_t)list->part.nelts, (uint32_t)list->size, (uint32_t)list->nalloc);
+}
+
+void
 test_slab() {
     ngx_slab_pool_t *sp;
     void *p;
@@ -40,6 +52,52 @@ test_slab() {
     printf("allocated address: %p\n", p);
     printf("sp->addr: %p\n", sp->addr);
     printf("sp->end: %p\n", sp->end);
+}
+
+void
+test_array() {
+    ngx_array_t *array;
+    int *p;
+    int i;
+
+    array = ngx_array_create(ngx_cycle->pool, 100, sizeof(int));
+
+    for(i = 0; i < 10; i++) {
+        p = (int *)ngx_array_push(array);
+        *p = i;
+    }
+
+    inspect_array(array);
+}
+
+void
+test_list() {
+    ngx_list_t *list;
+    ngx_list_part_t *part;
+    int *p, i;
+    uint32_t j;
+    int *data;
+
+    list = ngx_list_create(ngx_cycle->pool, 100, sizeof(int));
+
+    for(i = 0; i < 10; i++) {
+        p = (int *)ngx_list_push(list);
+        *p = i;
+    }
+
+    part = &list->part;
+    printf("%p %p\n", part, list->last);
+    while(part) {
+        data = (int *)part->elts;
+
+        for(j = 0; j < part->nelts; j++) {
+            printf("%d ", data[j]);
+        }
+        part = part->next;
+    }
+    printf("\n");
+
+    inspect_list(list);
 }
 
 
@@ -70,7 +128,11 @@ int main(int argc, const char *argv[])
         return 1;
     }
 
-    // test_slab();
+    test_slab();
+    test_array();
+    test_list();
+
+    printf("done!\n");
 
     return 0;
 }
